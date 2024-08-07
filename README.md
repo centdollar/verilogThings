@@ -1,5 +1,7 @@
 # What is this?
-This is a Vim function that is used for fast creation of a verilog module instantiation template.
+This is a Vim function that is used for fast creation of a verilog module instantiation template. Some other functionality would be cool, such as:
+- State Machine Template Generator
+- Basic Module template
 
 # What can it do?
 Currently the feature set is small, but here is what it can do
