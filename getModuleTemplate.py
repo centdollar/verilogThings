@@ -2,16 +2,18 @@
 
 import sys
 
+# get the module instantiation template
 def getModuleTemplate(moduleName):
     moduleTemplate = parseTemplate(moduleName);
     return moduleTemplate
 
 
+# Return a inst template from a given module name
 def parseTemplate(moduleName):
+
+    # open file based
     with open(f"./{moduleName}.v") as f:
         lines = f.readlines()
-
-    print(lines)
 
     portListStart = 1
     for index, line in enumerate(lines):
@@ -37,8 +39,6 @@ def parseTemplate(moduleName):
         else:
             pass
 
-        print("Port Info")
-        print(portInfo)
 
         # Check for a port with no width
         if len(portInfo) == 2:
@@ -56,7 +56,6 @@ def parseTemplate(moduleName):
                 while "]" not in portInfo[i]:
                     endOfWidth = i
                     i += 1
-                    print(portInfo[i])
                     continue
                 portList.append(portInfo[i+1].strip(","))
 
@@ -68,8 +67,6 @@ def parseTemplate(moduleName):
 
     
 
-    print("Port List")
-    print(portList)
     template = formatPortList(moduleName, portList)
     return template
 
@@ -81,7 +78,6 @@ def formatPortList(moduleName, portList):
 
     for index, port in enumerate(portList):
         if index == len(portList)-1:
-            print("here")
             template += f"\t.{port}()\n);\n"
         else:
             template += f"\t.{port}(),\n"

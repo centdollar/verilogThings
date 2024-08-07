@@ -9,7 +9,8 @@ fi
 # The first argument
 ARGUMENT=$1
 
+# Pass argument to python script
 RESULT=$(python3 /home/wombat/repos/verilogThings/getModuleTemplate.py "$ARGUMENT")
 
 # Print the argument
-echo "Argument passed: $RESULT"
+echo "$RESULT"
