@@ -7,6 +7,98 @@ def getModuleTemplate(moduleName):
     moduleTemplate = parseTemplate(moduleName);
     return moduleTemplate
 
+# I need a parser that can take a list of strings seperated by spaces
+# So what I can do is just 
+def tokenize(file):
+    tokens = []
+    for line in file:
+        splitLine = line.split(' ')
+        for token in splitLine:
+            strippedToken = token.strip('\t') 
+            strippedToken = strippedToken.strip('\n')
+            if strippedToken == '':
+                continue
+            else:
+                tokens.append(strippedToken)
+
+    return tokens
+
+def createModuleTemplate(tokens):
+    template = ""
+    for index, token in enumerate(tokens):
+        # Find module header
+        if "module" in token and "endmodule" not in token:
+            moduleDeclStart = index
+        if ");" in token:
+            moduleDeclEnd = index
+            break
+    tokens = tokens[moduleDeclStart:moduleDeclEnd+1]
+    paramsList = []
+    portList = []
+    while len(tokens):
+        if "module" in tokens[0]:
+            template += tokens[1]
+            tokens = tokens[2:]
+            continue
+        if "#(" in tokens[0]:
+            numParamTokens = 1
+            paramTokens = tokens[1:]
+            while paramTokens[0] != ")":
+                if "parameter" in paramTokens[0] and "=" in paramTokens[2]:
+                    paramsList.append([paramTokens[1], paramTokens[3].strip(",")])
+                    paramTokens = paramTokens[4:]
+                    numParamTokens += 4
+                    continue
+                else:
+                    print("Error")
+            tokens = tokens[numParamTokens+1:]
+
+        if "(" in tokens[0]:
+            portTokens = tokens[1:]
+
+            while ");" not in portTokens[0]:
+                if "input" or "output" in portTokens[0]:
+                    portType = portTokens[0]
+                    portTokens = portTokens[1:]
+                    portSize = ""
+                    if "[" in portTokens[0] and "]" in portTokens[0]:
+                        portSize += portTokens[0]
+                        portList.append([portTokens[1].strip(","), ':'+portSize, portType])
+                        portTokens = portTokens[2:]
+                        continue
+                    if "[" in portTokens[0]:
+                        portSize += portTokens[0]
+                        portTokens = portTokens[1:]
+                        while "]" not in portTokens[0]:
+                            portSize += portTokens[0]
+                            portTokens = portTokens[1:]
+                        portSize += portTokens[0] 
+                        portList.append([portTokens[1].strip(","), ':'+portSize, portType])
+                        portTokens = portTokens[2:]
+                        continue
+                    else:
+                        portList.append([portTokens[0].strip(","), "", portType])
+                        portTokens = portTokens[1:]
+                        continue
+        tokens = []
+
+        if paramsList:
+            template += " #(\n"
+            for index, param in enumerate(paramsList):
+                if index == len(paramsList)-1:
+                    template += f"\t.{param[0]}()\t// defualt={param[1]}\n)\n"
+                else:
+                    template += f"\t.{param[0]}(),\t// defualt={param[1]}\n"
+
+        template += "inst_name\n"
+        template += "(\n"
+        for index, port in enumerate(portList):
+            if index == len(portList)-1:
+                template += f"\t.{port[0]}()\t// {port[2]}{port[1]}\n);\n"
+            else:
+                template += f"\t.{port[0]}(),\t// {port[2]}{port[1]}\n"
+    return (template)
+
 
 # Return a inst template from a given module name
 def parseTemplate(moduleName):
@@ -15,74 +107,10 @@ def parseTemplate(moduleName):
     with open(f"./{moduleName}.v") as f:
         lines = f.readlines()
 
-    portListStart = 1
-    for index, line in enumerate(lines):
-        line = line.strip()
-        if line[0:1] == "//":
-            continue
-        if(f"module {moduleName}") in line:
-            portListStart = index + 1
-            break  
-    
-    portList = []
+    tokens = tokenize(lines)
 
-    for index, line in enumerate(lines[portListStart:]):
-        line = line.strip()
-        portInfo = line.split(" ")
-
-        if(portInfo[0] == ");"):
-            break
-        if(portInfo[0] == "input"):
-            pass
-        elif(portInfo[0] == "output"):
-            pass
-        else:
-            pass
-
-
-        # Check for a port with no width
-        if len(portInfo) == 2:
-            portList.append(portInfo[1].strip(","))
-
-
-        # check to see if their is a port width
-        endOfWidth = 1
-        i = 0
-        if "[" in portInfo[1]:
-            if "]" in portInfo[1]:
-                portList.append(portInfo[endOfWidth+1].strip(","))
-                continue
-            else:
-                while "]" not in portInfo[i]:
-                    endOfWidth = i
-                    i += 1
-                    continue
-                portList.append(portInfo[i+1].strip(","))
-
-        else:
-            pass
-
-        # get the port and add it to an array
-        #portList.append(portInfo[endOfWidth])
-
-    
-
-    template = formatPortList(moduleName, portList)
-    return template
-
-def formatPortList(moduleName, portList):
-    template = ""
-
-    # add in standard instantiation stuff
-    template += f"{moduleName} your_inst_name (\n"
-
-    for index, port in enumerate(portList):
-        if index == len(portList)-1:
-            template += f"\t.{port}()\n);\n"
-        else:
-            template += f"\t.{port}(),\n"
-    
-    return template
+    template = createModuleTemplate(tokens)
+    return template 
 
 
 if __name__ == "__main__":
