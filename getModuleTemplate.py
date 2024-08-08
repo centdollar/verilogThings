@@ -9,6 +9,7 @@ def getModuleTemplate(moduleName):
 
 # I need a parser that can take a list of strings seperated by spaces
 # So what I can do is just 
+# TODO: add in line comments
 def tokenize(file):
     tokens = []
     for line in file:
