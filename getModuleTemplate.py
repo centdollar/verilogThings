@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import re
 import sys
 
 # get the module instantiation template
@@ -7,21 +7,25 @@ def getModuleTemplate(moduleName):
     moduleTemplate = parseTemplate(moduleName);
     return moduleTemplate
 
-# I need a parser that can take a list of strings seperated by spaces
-# So what I can do is just 
-# TODO: add in line comments
+# Splits the file into valid tokens for creating the module template
 def tokenize(file):
     tokens = []
     for line in file:
-        splitLine = line.split(' ')
-        for token in splitLine:
-            strippedToken = token.strip('\t') 
-            strippedToken = strippedToken.strip('\n')
-            if strippedToken == '':
-                continue
-            else:
-                tokens.append(strippedToken)
+        splitLine = re.split(r'[ \t]', line)
 
+        #splitLine = line.split('\t')
+        while len(splitLine):
+           token = splitLine[0]
+           token = re.sub(r'[\n\t]', '', token)
+
+           # handle comments
+           if "//" in token:
+               splitLine = []
+               continue
+           else:
+               if token:
+                   tokens.append(token)
+               splitLine = splitLine[1:]
     return tokens
 
 def createModuleTemplate(tokens):
@@ -44,6 +48,7 @@ def createModuleTemplate(tokens):
         if "#(" in tokens[0]:
             numParamTokens = 1
             paramTokens = tokens[1:]
+            err = 0
             while paramTokens[0] != ")":
                 if "parameter" in paramTokens[0] and "=" in paramTokens[2]:
                     paramsList.append([paramTokens[1], paramTokens[3].strip(",")])
@@ -52,6 +57,9 @@ def createModuleTemplate(tokens):
                     continue
                 else:
                     print("Error")
+                    err += 1
+                    if(err > 5):
+                        quit()
             tokens = tokens[numParamTokens+1:]
 
         if "(" in tokens[0]:

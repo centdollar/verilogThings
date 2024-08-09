@@ -1,12 +1,13 @@
 // Test
 		// Test1
 
-module example #(
+module example #( // here at the place
 	parameter x = 5,
+	// parameter
 	parameter y = 4
 )
 (
-	input clk,
+	input clk,	// cent Testing123
 	output clk2,
 	output [4:0] count,
 	input [4 : 0] counter,
