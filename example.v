@@ -7,7 +7,7 @@ module example #( // here at the place
 	parameter y = 4
 )
 (
-	input clk,	// cent Testing123
+	input reg clk,	// cent testing123
 	output clk2,
 	output [4:0] count,
 	input [4 : 0] counter,
