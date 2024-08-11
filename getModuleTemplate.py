@@ -31,7 +31,6 @@ def tokenize(file):
 
 def createModuleTemplate(tokens):
     template = ""
-    print(tokens)
     for index, token in enumerate(tokens):
         # Find module header
         if "module" in token and "endmodule" not in token:
@@ -42,6 +41,7 @@ def createModuleTemplate(tokens):
     tokens = tokens[moduleDeclStart:moduleDeclEnd+1]
     paramsList = []
     portList = []
+    maxPortWidth = 0
     while len(tokens):
         if "module" in tokens[0]:
             template += tokens[1]
@@ -69,38 +69,40 @@ def createModuleTemplate(tokens):
 
             portSize = ""
             portType = ""
-            reg = "" 
+            portAtribute = "" 
             while ");" not in portTokens[0]:
-                if "input" or "output" in portTokens[0]:
+                if "input" in portTokens[0] or "output" in portTokens[0]:
                     portType = portTokens[0]
                     portTokens = portTokens[1:]
                     continue
                 elif "reg" in portTokens[0]:
                     portTokens = portTokens[1:]
-                    reg = "reg"
+                    portAtribute = "reg"
                     continue
-               
+
+                elif "wire" in portTokens[0]:
+                    portTokens = portTokens[1:]
+                    portAtribute = "wire"
+                    continue
 
                 elif '[' in portTokens[0]:
-                    print(portTokens[0])
-                    if ']' in portTokens[0]:
-                        portSize = portTokens[0]
-                        portTokens = portTokens[2:]
+                    while ']' not in portTokens[0]:
+                        portSize += portTokens[0]
+                        portTokens = portTokens[1:]
                         continue
-                    else:
-                        for tok, idx in portTokens:
-                            if ']' in tok:
-                                portSize += ''.join(portTokens[:idx])
-                                print("here")
-                                portTokens = portTokens[:idx]
-                                break
-                        continue
-                        
+                    portSize += portTokens[0]
+                    portTokens = portTokens [1:]
+                    continue
+
                 else:
                     portName = portTokens[0].strip(',')
-                    portList.append([portName,portType,portSize,reg])
+                    if len(portName) > maxPortWidth:
+                        maxPortWidth = len(portName)
+                    portList.append([portName,portType,portSize,portAtribute])
+                    portSize = ''
+                    portType = ''
                     portTokens = portTokens[1:]
-                    reg = ''
+                    portAtribute = ''
                     continue
 
 
@@ -118,32 +120,10 @@ def createModuleTemplate(tokens):
         template += "(\n"
         for index, port in enumerate(portList):
             if index == len(portList)-1:
-                template += f"\t.{port[0]}()\t// {port[2]} {port[3]}:{port[1]}\n);\n"
+                template += f"\t.{port[0]}() {' ':<{maxPortWidth}}// {port[1]} {port[3]} {port[2]}\n);\n"
             else:
-                template += f"\t.{port[0]}(),\t// {port[2]} {port[3]}:{port[1]}\n"
+                template += f"\t.{port[0]}(),{' ':<{maxPortWidth}}// {port[1]} {port[3]} {port[2]}\n"
     return (template)
-
-'''
-                if "[" in portTokens[0] and "]" in portTokens[0]:
-                    portSize += portTokens[0]
-                    portList.append([portTokens[1].strip(","), ':'+portSize, portType])
-                    portTokens = portTokens[2:]
-                    continue
-                if "[" in portTokens[0]:
-                    portSize += portTokens[0]
-                    portTokens = portTokens[1:]
-                    while "]" not in portTokens[0]:
-                        portSize += portTokens[0]
-                        portTokens = portTokens[1:]
-                    portSize += portTokens[0] 
-                    portList.append([portTokens[1].strip(","), ':'+portSize, portType])
-                    portTokens = portTokens[2:]
-                    continue
-                else:
-                    portList.append([portTokens[0].strip(","), "", portType])
-                    portTokens = portTokens[1:]
-                    continue
-                    '''
 
 
 # Return a inst template from a given module name

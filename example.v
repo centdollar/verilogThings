@@ -7,12 +7,12 @@ module example #( // here at the place
 	parameter y = 4
 )
 (
-	input reg clk,	// cent testing123
-	output clk2,
-	output [4:0] count,
-	input [4 : 0] counter,
-	input [ 4 : 0 ] counter_1,
-	output [4: 0] counter_2
+	input clk,	// cent testing123
+	output reg clk2,
+	output reg [4:0] count,
+	input [5 : 0] counter,
+	input [ 6 : 0 ] counter_1,
+	output reg [7: 0] counter_2
 
 );
 
